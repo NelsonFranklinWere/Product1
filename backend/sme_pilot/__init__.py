@@ -1,0 +1,1 @@
+# SME Pilot Django Project

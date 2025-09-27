@@ -1,0 +1,325 @@
+{
+  "name": "Smart Recruitment Assistant - newApplicationWebhook",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "newApplicationWebhook",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "credentials": {}
+    },
+
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "={{$json[\"cvUrl\"]}}",
+        "jsonParameters": false,
+        "responseFormat": "file",
+        "options": {}
+      },
+      "name": "Download CV (HTTP Request)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 250],
+      "credentials": {}
+    },
+
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.pdf-parser.example/convert",     
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{ $credentials.pdfParserApi.key || '' }}"
+        },
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={ \"input_type\":\"url\",\"url\":$json[\"cvUrl\"] }"
+      },
+      "name": "Parse CV to Text (PDF Parser) - placeholder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [750, 250],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pdfParserApi"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "jobDescription",
+              "value": "={{ $json[\"jobDescription\"] || $json[\"jobText\"] || '' }}"
+            },
+            {
+              "name": "cvText",
+              "value": "={{ $json[\"text\"] || $json[\"parsedText\"] || '' }}"
+            },
+            {
+              "name": "candidateName",
+              "value": "={{ $json[\"candidateName\"] }}"
+            },
+            {
+              "name": "candidateEmail",
+              "value": "={{ $json[\"candidateEmail\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set - Prepare LLM Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1000, 250]
+    },
+
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://gemini.googleapis.com/v1/models/gemini-1.5:generateMessage", 
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"prompt\": {\n    \"messages\": [\n      {\"role\":\"system\",\"content\":\"You are a recruiter assistant. Given a job description and a CV, return a JSON object with fields: match_score (0-100), category (Strong Match|Potential|Not Suitable), and notes — brief reasoning and which skills matched.\"},\n      {\"role\":\"user\",\"content\": \"Job description:\\n{{ $json.jobDescription }}\\n\\nCandidate CV:\\n{{ $json.cvText }}\\n\\nReturn only valid JSON.\"}\n    ]\n  },\n  \"temperature\": 0.0,\n  \"maxOutputTokens\": 800\n}"
+      },
+      "name": "Gemini - Score & Notes (HTTP Request)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1250, 250],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "geminiApiKey"
+        }
+      },
+      "notesInFlow": [
+        "This node calls Gemini via HTTP. Paste your Gemini API key under Credentials -> HTTP Header Auth -> apiKey (or leave as provided)."
+      ]
+    },
+
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json[\"match_score\"] }}",
+              "operation": "greaterEqual",
+              "value2": 80
+            }
+          ]
+        }
+      },
+      "name": "If - Shortlist?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1500, 150]
+    },
+
+    {
+      "parameters": {
+        "calendarId": "primary",
+        "options": {},
+        "start": "={{ new Date().toISOString() }}",
+        "end": "={{ new Date(Date.now()+30*60000).toISOString() }}",
+        "summary": "Interview: {{$json[\"candidateName\"]}} — {{ $json[\"jobTitle\"] || 'Candidate Interview' }}",
+        "description": "Auto-scheduled interview for {{$json[\"candidateName\"]}}.\nNotes: {{$json[\"notes\"]}}",
+        "attendees": "={{[{\"email\": $json[\"candidateEmail\"]}]}}"
+      },
+      "name": "Google Calendar - Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [1750, 50],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "googleCalendar1"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "sheetId": "={{ $credentials.googleSheets.sheetId || '' }}",
+        "range": "Sheet1",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataOperation": "append",
+        "valueData": "={{ [[$json.candidateName,$json.candidateEmail,$json.match_score,$json.category,$json.notes,$json.status]] }}"
+      },
+      "name": "Google Sheets - Append Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1750, 250],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "googleSheets1"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "fromEmail": "={{ $credentials.gmail.fromEmail || '' }}",
+        "to": "={{ $json.candidateEmail }}",
+        "subject": "Application status — {{$json.candidateName}}",
+        "text": "Dear {{$json.candidateName}},\\n\\nThank you for applying. At this time your application has been marked as 'Not Suitable'. We appreciate your interest.\\n\\nBest regards,\\nRecruitment Team"
+      },
+      "name": "Gmail - Send Rejection Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [1750, 450],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail1"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "fromEmail": "={{ $credentials.gmail.fromEmail || '' }}",
+        "to": "hr-team@example.com",
+        "subject": "Flagged Application for Review — {{$json.candidateName}}",
+        "text": "HR team,\\n\\nA candidate requires review:\\nName: {{$json.candidateName}}\\nEmail: {{$json.candidateEmail}}\\nMatch Score: {{$json.match_score}}\\nNotes: {{$json.notes}}\\n\\nPlease review."
+      },
+      "name": "Gmail - Notify HR (Flagged)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [1750, 350],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail1"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "functionCode": "return items.map(i=>{\n  const parsed = i.json;\n  // try to parse Gemini response if returned as text\n  let gemResp = parsed.response || parsed.body || parsed.text;\n  try {\n    if(typeof gemResp === 'string') gemResp = JSON.parse(gemResp);\n  } catch(err){}\n  const match_score = gemResp?.match_score ?? gemResp?.score ?? 0;\n  const category = gemResp?.category ?? (match_score>=80? 'Strong Match' : (match_score>=50? 'Potential':'Not Suitable'));\n  const notes = gemResp?.notes ?? gemResp?.explanation ?? '';\n  return {json: {...parsed, match_score, category, notes}};\n});"
+      },
+      "name": "Function - Normalize LLM Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1400, 250]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Download CV (HTTP Request)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CV (HTTP Request)": {
+      "main": [
+        [
+          {
+            "node": "Parse CV to Text (PDF Parser) - placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CV to Text (PDF Parser) - placeholder": {
+      "main": [
+        [
+          {
+            "node": "Set - Prepare LLM Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Prepare LLM Prompt": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Score & Notes (HTTP Request)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Score & Notes (HTTP Request)": {
+      "main": [
+        [
+          {
+            "node": "Function - Normalize LLM Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - Normalize LLM Output": {
+      "main": [
+        [
+          {
+            "node": "If - Shortlist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Shortlist?": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar - Create Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Append Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail - Notify HR (Flagged)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Append Row",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Gmail - Send Rejection Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Append Row",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "connectionsHook": {},
+  "active": false,
+  "settings": {}
+}
