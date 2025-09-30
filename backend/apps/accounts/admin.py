@@ -36,10 +36,9 @@ class BusinessProfileAdmin(admin.ModelAdmin):
     """
     Admin interface for BusinessProfile model
     """
-    list_display = ('user', 'industry', 'employee_count', 'created_at')
-    list_filter = ('industry', 'employee_count', 'created_at')
+    list_display = ('user', 'industry', 'employee_count')
+    list_filter = ('industry', 'employee_count')
     search_fields = ('user__business_name', 'user__email', 'description')
-    ordering = ('-created_at',)
 
 
 @admin.register(APIKey)

@@ -83,7 +83,7 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 id="first_name"
-                placeholder="John"
+                placeholder="your_first_name"
                 className="pl-10"
                 {...register('first_name')}
               />
@@ -99,7 +99,7 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
             </label>
             <Input
               id="last_name"
-              placeholder="Doe"
+              placeholder="your lastname"
               {...register('last_name')}
             />
             {errors.last_name && (
@@ -114,7 +114,7 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
           </label>
           <Input
             id="username"
-            placeholder="johndoe"
+            placeholder="enter username"
             {...register('username')}
           />
           {errors.username && (
@@ -131,7 +131,7 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
             <Input
               id="email"
               type="email"
-              placeholder="john@example.com"
+              placeholder="your_email@example.com"
               className="pl-10"
               {...register('email')}
             />
@@ -209,7 +209,7 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               id="phone_number"
-              placeholder="+254 700 000 000"
+              placeholder="+254 743 869 564"
               className="pl-10"
               {...register('phone_number')}
             />

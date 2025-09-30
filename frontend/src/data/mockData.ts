@@ -1,7 +1,7 @@
-import { User, SocialAccount, Post, Message, Analytics } from '../types';
+// import { User, SocialAccount, Post, Message, Analytics } from '../types';
 
 // Mock user data
-export const mockUser: User = {
+export const mockUser = {
   id: '1',
   name: 'John Kimani',
   email: 'john@nairobitechsolutions.com',
@@ -12,7 +12,7 @@ export const mockUser: User = {
 };
 
 // Mock social accounts data
-export const mockSocialAccounts: SocialAccount[] = [
+export const mockSocialAccounts: any[] = [
   {
     id: '1',
     platform: 'facebook',
@@ -54,7 +54,7 @@ export const mockSocialAccounts: SocialAccount[] = [
 ];
 
 // Mock posts data
-export const mockPosts: Post[] = [
+export const mockPosts: any[] = [
   {
     id: '1',
     content: 'Exciting news! We\'ve just launched our new mobile app development services specifically for Nairobi small businesses. Get your business online with our affordable solutions! 📱💼 #NairobiTech #SmallBusiness #AppDevelopment',
@@ -128,7 +128,7 @@ export const mockPosts: Post[] = [
 ];
 
 // Mock messages data
-export const mockMessages: Message[] = [
+export const mockMessages = [
   {
     id: '1',
     platform: 'facebook',
@@ -186,12 +186,12 @@ export const mockMessages: Message[] = [
 ];
 
 // Mock analytics data
-export const mockAnalytics: Analytics = {
+export const mockAnalytics = {
   totalFollowers: 6307,
   totalEngagement: 2847,
   postsThisWeek: 3,
   responseRate: 94.5,
-  recentPosts: mockPosts.filter(post => post.status === 'published').slice(0, 3),
+  recentPosts: (Array.isArray(mockPosts) ? mockPosts.filter(post => post.status === 'published').slice(0, 3) : []),
   engagementTrends: [
     { date: '2025-01-09', value: 234 },
     { date: '2025-01-10', value: 312 },
@@ -202,3 +202,4 @@ export const mockAnalytics: Analytics = {
     { date: '2025-01-15', value: 208 }
   ]
 };
+// ...existing code...

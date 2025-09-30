@@ -18,7 +18,8 @@ export function CommunicationsHub({ conversations, onConversationsUpdate }: Prop
   const [products, setProducts] = useState<Product[]>([])
   const [isSharingProduct, setIsSharingProduct] = useState(false)
 
-  const { lastMessage, joinConversation, sendMessage, sendTypingIndicator } = useWebSocket()
+  const lastMessage: any = useWebSocket()
+  const { joinConversation, sendMessage, sendTypingIndicator } = useWebSocket()
   const typingTimeoutRef = useRef<NodeJS.Timeout>()
 
   const activeConversation = useMemo(() => {
@@ -84,7 +85,7 @@ export function CommunicationsHub({ conversations, onConversationsUpdate }: Prop
       if (activeConversationId) {
         setMessages(prev => [...prev, {
           id: Date.now(),
-          text: `Payment ${lastMessage.status} - KES ${lastMessage.amount} (${lastMessage.receipt_number || ''})`,
+          text: `Payment ${(lastMessage as any).status} - KES ${(lastMessage as any).amount} (${(lastMessage as any).receipt_number || ''})`,
           direction: 'inbound',
           message_type: 'text',
           timestamp: new Date().toISOString(),

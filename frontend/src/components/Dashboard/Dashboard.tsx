@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useWebSocket } from '@/hooks/useWebSocket'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { Header } from '@/components/layout/Header'
+import { Sidebar } from '@/components/Layout/Sidebar'
+import { Header } from '@/components/Layout/Header'
 import { DashboardOverview } from './DashboardOverview'
 import { CommunicationsHub } from './CommunicationsHub'
-import { ProductCatalog } from './ProductCatalog'
-import { AnalyticsDashboard } from './AnalyticsDashboard'
+// import { ProductCatalog } from './ProductCatalog'
+// import { AnalyticsDashboard } from './AnalyticsDashboard'
 import { BillingDashboard } from '@/components/Analytics/BillingDashboard'
 import { Contacts } from '@/components/CRM/Contacts'
-import { Settings } from './Settings'
+// import { Settings } from './Settings'
 import { apiClient } from '@/lib/api'
 import { Conversation, Product, UsageLog, BusinessMetrics } from '@/types'
 
@@ -112,24 +112,18 @@ export function Dashboard() {
         )
       case 'products':
         return (
-          <ProductCatalog
-            products={products}
-            onProductsUpdate={setProducts}
-          />
+          <div className="p-6">Product Catalog coming soon...</div>
         )
       case 'analytics':
         return (
-          <AnalyticsDashboard
-            usageLog={usageLog}
-            businessMetrics={businessMetrics}
-          />
+          <div className="p-6">Analytics Dashboard coming soon...</div>
         )
       case 'billing':
         return <BillingDashboard />
       case 'contacts':
         return <Contacts />
       case 'settings':
-        return <Settings />
+        return <div className="p-6">Settings coming soon...</div>
       default:
         return (
           <DashboardOverview

@@ -25,9 +25,9 @@ export const MessageCenter: React.FC<MessageCenterProps> = ({
 
   const filteredMessages = messages.filter(message => {
     switch (filter) {
-      case 'unread': return !message.isRead;
-      case 'messages': return message.type === 'message';
-      case 'comments': return message.type === 'comment';
+      case 'unread': return !message.is_read;
+  case 'messages': return message.message_type === 'message';
+  case 'comments': return message.message_type === 'comment';
       default: return true;
     }
   });

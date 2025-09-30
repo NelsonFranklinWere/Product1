@@ -8,7 +8,7 @@ type AuthListener = (user: MinimalUser) => void;
 const listeners = new Set<AuthListener>();
 
 function notify(user: MinimalUser) {
-  for (const cb of listeners) cb(user);
+  listeners.forEach(cb => cb(user));
 }
 
 export const getCurrentUser = async (): Promise<MinimalUser> => {
@@ -38,11 +38,19 @@ export const signUp = async (
   // Optionally store a profile
   const profile: AppUser = {
     id: user.id,
-    name: userData.name,
+    username: 'demo_user',
     email,
-    businessName: userData.businessName,
-    businessType: userData.businessType,
-    location: userData.location
+    first_name: 'Demo',
+    last_name: 'User',
+    full_name: 'Demo User',
+    business_name: userData.businessName || 'Demo Business',
+    business_type: userData.businessType || 'Technology',
+    location: userData.location || 'Nairobi, Kenya',
+    phone_number: '0700000000',
+    subscription_tier: 'free',
+    is_verified: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   };
   localStorage.setItem(`profile:${user.id}`, JSON.stringify(profile));
   notify(user);

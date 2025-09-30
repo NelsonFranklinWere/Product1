@@ -5,8 +5,8 @@ import { apiClient } from '@/lib/api'
 import { Contact } from '@/types'
 
 export function Contacts() {
-  const [contacts, setContacts] = useState<Contact[]>([])
-  const [activeContact, setActiveContact] = useState<Contact | null>(null)
+  const [contacts, setContacts] = useState<any[]>([])
+  const [activeContact, setActiveContact] = useState<any | null>(null)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -15,8 +15,8 @@ export function Contacts() {
     const load = async () => {
       try {
         const data = await apiClient.getContacts()
-        setContacts(data)
-        if (data.length) setActiveContact(data[0])
+  setContacts(Array.isArray(data) ? data : [])
+  if (Array.isArray(data) && data.length) setActiveContact(data[0])
       } catch (e) {
         console.error('Failed to load contacts', e)
       } finally {
@@ -67,7 +67,7 @@ export function Contacts() {
               <div className="text-xs text-gray-500">{c.phone_number || c.facebook_id || c.email || '—'}</div>
               {c.tags?.length ? (
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {c.tags.slice(0, 4).map((t, idx) => (
+                  {c.tags.slice(0, 4).map((t: any, idx: any) => (
                     <span key={idx} className="text-[10px] bg-gray-100 text-gray-700 rounded px-1.5 py-0.5">{String(t)}</span>
                   ))}
                   {c.tags.length > 4 ? <span className="text-[10px] text-gray-500">+{c.tags.length - 4}</span> : null}

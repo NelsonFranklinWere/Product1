@@ -1,6 +1,15 @@
 import React from 'react';
 import { Facebook, Instagram, MessageCircle, Linkedin } from 'lucide-react';
-import { SocialAccount } from '../../types';
+
+type PlatformType = 'facebook' | 'instagram' | 'whatsapp' | 'tiktok' | 'linkedin';
+type SocialAccount = {
+  id: string;
+  platform: PlatformType;
+  accountName: string;
+  followers: number;
+  isConnected: boolean;
+  lastSync?: Date | string;
+};
 
 interface SocialAccountCardProps {
   account: SocialAccount;
@@ -32,7 +41,7 @@ export const SocialAccountCard: React.FC<SocialAccountCardProps> = ({ account, o
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-lg ${colorClass}`}>
-            {typeof Icon === 'function' ? <Icon /> : <Icon className="w-5 h-5 text-white" />}
+            {account.platform === 'tiktok' ? <Icon /> : Icon ? <Icon className="w-5 h-5 text-white" /> : null}
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 capitalize">{account.platform}</h3>

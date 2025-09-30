@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
 import { Calendar, Plus, Edit, Trash2, Clock, Users } from 'lucide-react';
-import { Post } from '../../types';
+
+type ContentCalendarPost = {
+  id: string;
+  content: string;
+  platforms: string[];
+  scheduledFor: Date | string;
+  status: string;
+  engagement: {
+    likes: number;
+    comments: number;
+    shares: number;
+    reach: number;
+  };
+  createdAt: Date | string;
+};
 
 interface ContentCalendarProps {
-  posts: Post[];
+  posts: ContentCalendarPost[];
   onCreatePost: () => void;
-  onEditPost: (post: Post) => void;
+  onEditPost: (post: ContentCalendarPost) => void;
   onDeletePost: (postId: string) => void;
 }
 
@@ -15,7 +29,7 @@ export const ContentCalendar: React.FC<ContentCalendarProps> = (
   const { posts, onCreatePost, onEditPost, onDeletePost } = props;
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
 
-  const getStatusColor = (status: Post['status']): string => {
+  const getStatusColor = (status: ContentCalendarPost['status']): string => {
     switch (status) {
       case 'published': return 'bg-green-100 text-green-800';
       case 'scheduled': return 'bg-blue-100 text-blue-800';
@@ -67,7 +81,7 @@ export const ContentCalendar: React.FC<ContentCalendarProps> = (
 
       <div className="p-6">
         <div className="space-y-4">
-          {posts.map((post: Post) => {
+          {posts.map((post: ContentCalendarPost) => {
             const scheduledDate = post.scheduledFor instanceof Date
               ? post.scheduledFor
               : new Date(post.scheduledFor);

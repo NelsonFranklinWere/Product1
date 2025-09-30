@@ -1,9 +1,17 @@
 import React from 'react';
 import { BarChart3, TrendingUp, Eye, MessageSquare, Share2, Users } from 'lucide-react';
-import { Analytics, Post } from '../../types';
+
+type AnalyticsDashboardData = {
+  totalFollowers: number;
+  totalEngagement: number;
+  postsThisWeek: number;
+  responseRate: number;
+  recentPosts: any[];
+  engagementTrends: any[];
+};
 
 interface AnalyticsDashboardProps {
-  analytics: Analytics;
+  analytics: AnalyticsDashboardData;
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytics }) => {

@@ -2,10 +2,28 @@ import React from 'react';
 import { Users, TrendingUp, MessageSquare, Calendar, Target } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { SocialAccountCard } from './SocialAccountCard';
-import { Analytics, SocialAccount } from '../../types';
+
+type DashboardAnalytics = {
+  totalFollowers: number;
+  totalEngagement: number;
+  postsThisWeek: number;
+  responseRate: number;
+  recentPosts: any[];
+  engagementTrends: any[];
+};
+
+type PlatformType = 'facebook' | 'instagram' | 'whatsapp' | 'tiktok' | 'linkedin';
+type SocialAccount = {
+  id: string;
+  platform: PlatformType;
+  accountName: string;
+  followers: number;
+  isConnected: boolean;
+  lastSync?: Date | string;
+};
 
 interface DashboardOverviewProps {
-  analytics: Analytics;
+  analytics: DashboardAnalytics;
   socialAccounts: SocialAccount[];
   onConnectAccount: (platform: string) => void;
 }
