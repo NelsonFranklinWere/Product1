@@ -15,12 +15,20 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.views import APIView
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     """
     User registration
     """
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+    authentication_classes = [TokenAuthentication]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -42,12 +50,14 @@ class RegisterView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(generics.CreateAPIView):
     """
     User login
     """
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
+    authentication_classes = [TokenAuthentication]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -83,26 +93,25 @@ class LoginView(generics.CreateAPIView):
 
 class LogoutView(generics.DestroyAPIView):
     """
-    User logout
+    User logout: invalidate token and end session
     """
     permission_classes = [IsAuthenticated]
-    
+
     def delete(self, request, *args, **kwargs):
         try:
-            # Delete auth token
-            request.user.auth_token.delete()
-            
-            # Logout user
+            # Delete auth token if present
+            try:
+                token = Token.objects.get(user=request.user)
+                token.delete()
+            except Token.DoesNotExist:
+                pass
+
+            # End session
             logout(request)
-            
-            return Response({'message': 'Logout successful'})
-            
+            return Response({'message': 'Logged out successfully'}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
-            logger.error(f"Error during logout: {e}")
-            return Response(
-                {'error': 'Logout failed'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error(f"Logout failed: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
