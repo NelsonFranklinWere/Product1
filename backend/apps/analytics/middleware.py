@@ -13,38 +13,36 @@ class UsageTrackingMiddleware(MiddlewareMixin):
     """
     Middleware to track API usage for billing and analytics
     """
-    
+
     def process_request(self, request):
+        # Mark request start time
         request._start_time = time.time()
         return None
 
     def process_response(self, request, response):
         if hasattr(request, '_start_time'):
             response_time = int((time.time() - request._start_time) * 1000)
-            
-            # Log API calls
+
+            # Log only API calls
             if request.path.startswith('/api/'):
                 self._log_api_call(request, response, response_time)
-        
+
         return response
 
     def _log_api_call(self, request, response, response_time):
         """
-        Log API call details for monitoring
+        Log API call details for monitoring, safely handling DRF requests
         """
         try:
-            # Extract business user if authenticated
-            business = None
-            if hasattr(request, 'user') and request.user.is_authenticated:
-                business = request.user
-
-            # Determine service based on endpoint
+            business = getattr(request, 'user', None) if request.user.is_authenticated else None
             service = self._get_service_from_path(request.path)
-            
-            # Get client IP
             ip_address = self._get_client_ip(request)
-            
-            # Create API call log
+
+            # Avoid re-reading request.body to prevent stream errors
+            # Estimate request size from META content-length if available
+            request_size = int(request.META.get('CONTENT_LENGTH', 0)) if request.META.get('CONTENT_LENGTH') else 0
+            response_size = len(response.content) if hasattr(response, 'content') else 0
+
             APICallLog.objects.create(
                 business=business,
                 service=service,
@@ -52,12 +50,12 @@ class UsageTrackingMiddleware(MiddlewareMixin):
                 method=request.method,
                 status_code=response.status_code,
                 response_time_ms=response_time,
-                request_size_bytes=len(request.body) if hasattr(request, 'body') else 0,
-                response_size_bytes=len(response.content) if hasattr(response, 'content') else 0,
+                request_size_bytes=request_size,
+                response_size_bytes=response_size,
                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
                 ip_address=ip_address,
             )
-            
+
         except Exception as e:
             logger.error(f"Error logging API call: {e}")
 
@@ -71,8 +69,7 @@ class UsageTrackingMiddleware(MiddlewareMixin):
             return 'whatsapp'
         elif '/payments/' in path or '/mpesa/' in path:
             return 'mpesa'
-        else:
-            return 'internal'
+        return 'internal'
 
     def _get_client_ip(self, request):
         """

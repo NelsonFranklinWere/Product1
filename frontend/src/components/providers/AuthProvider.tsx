@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { User } from '@/types'
 import apiClient from '@/lib/api'
 
@@ -19,6 +20,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Check if user is logged in on app start
@@ -27,46 +29,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (token && savedUser) {
       try {
-        setUser(JSON.parse(savedUser))
-        // Optionally verify token with server
-        apiClient.getProfile().then((userData) => {
-          setUser(userData)
-          localStorage.setItem('user', JSON.stringify(userData))
-        }).catch(() => {
-          // Token invalid, clear storage
-          localStorage.removeItem('auth_token')
-          localStorage.removeItem('user')
-          setUser(null)
-        })
+        const parsedUser = JSON.parse(savedUser)
+        setUser(parsedUser)
+        
+        // Verify token with server
+        apiClient.getProfile()
+          .then((userData) => {
+            // Convert id to string if it's a number (backend returns integer)
+            const normalizedUser = {
+              ...userData,
+              id: String(userData.id),
+            }
+            setUser(normalizedUser as User)
+            localStorage.setItem('user', JSON.stringify(normalizedUser))
+          })
+          .catch(() => {
+            // Token invalid, clear storage
+            localStorage.removeItem('auth_token')
+            localStorage.removeItem('user')
+            setUser(null)
+          })
+          .finally(() => {
+            setLoading(false)
+          })
       } catch (error) {
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user')
         setUser(null)
+        setLoading(false)
       }
+    } else {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }, [])
 
   const login = async (email: string, password: string) => {
     try {
       const { user: userData, token } = await apiClient.login(email, password)
-      setUser(userData)
+      // Convert id to string if it's a number (backend returns integer)
+      const normalizedUser = {
+        ...userData,
+        id: String(userData.id),
+      }
+      setUser(normalizedUser as User)
       localStorage.setItem('auth_token', token)
-      localStorage.setItem('user', JSON.stringify(userData))
+      localStorage.setItem('user', JSON.stringify(normalizedUser))
+      router.push('/')
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || 'Login failed')
+      const errorMessage = error.response?.data?.error || 
+                           error.response?.data?.message || 
+                           error.message || 
+                           'Login failed. Please check your credentials.'
+      throw new Error(errorMessage)
     }
   }
 
   const register = async (data: any) => {
     try {
       const { user: userData, token } = await apiClient.register(data)
-      setUser(userData)
+      // Convert id to string if it's a number (backend returns integer)
+      const normalizedUser = {
+        ...userData,
+        id: String(userData.id),
+      }
+      setUser(normalizedUser as User)
       localStorage.setItem('auth_token', token)
-      localStorage.setItem('user', JSON.stringify(userData))
+      localStorage.setItem('user', JSON.stringify(normalizedUser))
+      router.push('/')
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || 'Registration failed')
+      const errorMessage = error.response?.data?.error || 
+                           error.response?.data?.message || 
+                           error.message || 
+                           'Registration failed. Please try again.'
+      throw new Error(errorMessage)
     }
   }
 
@@ -79,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
+      router.push('/login')
     }
   }
 
@@ -102,12 +138,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }

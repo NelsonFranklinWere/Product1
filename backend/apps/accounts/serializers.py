@@ -70,7 +70,6 @@ class BusinessProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
-
 class APIKeySerializer(serializers.ModelSerializer):
     """
     Serializer for APIKey model

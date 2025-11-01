@@ -1,11 +1,20 @@
 'use client'
 
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { AuthPage } from '@/components/Auth/AuthPage'
 import { Dashboard } from '@/components/Dashboard/Dashboard'
 
 export default function HomePage() {
   const { isAuthenticated, loading } = useAuth()
+  const router = useRouter()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push('/login')
+    }
+  }, [isAuthenticated, loading, router])
 
   if (loading) {
     return (
@@ -21,7 +30,7 @@ export default function HomePage() {
   }
 
   if (!isAuthenticated) {
-    return <AuthPage />
+    return null
   }
 
   return <Dashboard />
