@@ -4,6 +4,8 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AuthPage } from '@/components/Auth/AuthPage'
 import { useAuth } from '@/hooks/useAuth'
+import { PublicNavbar } from '@/components/Layout/PublicNavbar'
+import { AppFooter } from '@/components/Layout/AppFooter'
 
 export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth()
@@ -11,7 +13,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.push('/')
+      router.push('/dashboard')
     }
   }, [isAuthenticated, loading, router])
 
@@ -32,7 +34,13 @@ export default function LoginPage() {
     return null
   }
 
-  return <AuthPage />
+  return (
+    <>
+      <PublicNavbar />
+      <AuthPage />
+      <AppFooter />
+    </>
+  )
 }
 
 

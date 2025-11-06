@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/Layout/Sidebar'
 import { Header } from '@/components/Layout/Header'
+import { AppFooter } from '@/components/Layout/AppFooter'
 import { useAuth } from '@/hooks/useAuth'
 
 function ProtectedShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth()
   const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -35,10 +37,25 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab={''} onTabChange={() => {}} />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] bg-white shadow-xl">
+            <Sidebar />
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex flex-col">
-        <Header title="" subtitle="" user={user} />
+        <Header title="" subtitle="" user={user} onOpenMenu={() => setMobileOpen(true)} />
         <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <AppFooter />
       </div>
     </div>
   )

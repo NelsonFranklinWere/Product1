@@ -30,7 +30,7 @@ export function DashboardOverview({
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="bg-white p-6 rounded-lg shadow-sm border animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -122,7 +122,7 @@ export function DashboardOverview({
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon
           return (
@@ -222,7 +222,7 @@ export function DashboardOverview({
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
             <MessageSquare className="h-6 w-6 text-blue-600 mb-2" />
             <h4 className="font-medium text-gray-900">Start New Conversation</h4>

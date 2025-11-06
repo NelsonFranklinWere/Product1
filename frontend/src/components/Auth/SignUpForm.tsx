@@ -12,7 +12,11 @@ import { Eye, EyeOff, Mail, Lock, User, Building, MapPin, Phone, AlertCircle } f
 const signUpSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
   password_confirm: z.string(),
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
@@ -55,7 +59,52 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
       await registerUser(data)
       // Navigation is handled by AuthProvider after successful registration
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.')
+      console.error('SignUp error:', err)
+      console.error('Error response:', err.response)
+      console.error('Error response data:', err.response?.data)
+      
+      // Extract detailed error messages from backend
+      let errorMessage = 'Registration failed. Please try again.'
+      
+      // Check if it's an axios error with response
+      if (err.response && err.response.data) {
+        const errorData = err.response.data
+        
+        // Handle field-specific validation errors (Django REST Framework format)
+        const fieldErrors: string[] = []
+        
+        Object.keys(errorData).forEach((key) => {
+          if (Array.isArray(errorData[key])) {
+            // Django returns arrays of error messages for each field
+            fieldErrors.push(`${key}: ${errorData[key].join(', ')}`)
+          } else if (typeof errorData[key] === 'string') {
+            fieldErrors.push(errorData[key])
+          } else if (typeof errorData[key] === 'object' && errorData[key] !== null) {
+            // Handle nested objects
+            Object.keys(errorData[key]).forEach((subKey) => {
+              if (Array.isArray(errorData[key][subKey])) {
+                fieldErrors.push(`${key}.${subKey}: ${errorData[key][subKey].join(', ')}`)
+              }
+            })
+          }
+        })
+        
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('. ')
+        } else if (errorData.error) {
+          errorMessage = errorData.error
+        } else if (errorData.message) {
+          errorMessage = errorData.message
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData
+        }
+      } else if (err.message) {
+        // Fallback to error message if no response data
+        errorMessage = err.message
+      }
+      
+      console.error('Final error message:', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -239,6 +288,9 @@ export function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Must be at least 8 characters with uppercase, lowercase, and a number
+          </p>
           {errors.password && (
             <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
           )}

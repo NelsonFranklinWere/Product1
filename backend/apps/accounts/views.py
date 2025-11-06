@@ -31,23 +31,42 @@ class RegisterView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
     
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        logger.info(f"Registration attempt - Data received: {request.data}")
         
-        # Create user
-        user = serializer.save()
+        # Clean up empty strings for optional fields
+        data = request.data.copy()
+        if 'phone_number' in data and data['phone_number'] == '':
+            data['phone_number'] = None
         
-        # Create business profile
-        BusinessProfile.objects.create(user=user)
+        serializer = self.get_serializer(data=data)
         
-        # Create auth token
-        token, created = Token.objects.get_or_create(user=user)
+        if not serializer.is_valid():
+            logger.error(f"Registration validation failed: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response({
-            'user': UserSerializer(user).data,
-            'token': token.key,
-            'message': 'User registered successfully'
-        }, status=status.HTTP_201_CREATED)
+        try:
+            # Create user
+            user = serializer.save()
+            
+            # Create business profile
+            BusinessProfile.objects.create(user=user)
+            
+            # Create auth token
+            token, created = Token.objects.get_or_create(user=user)
+            
+            logger.info(f"User registered successfully: {user.email}")
+            
+            return Response({
+                'user': UserSerializer(user).data,
+                'token': token.key,
+                'message': 'User registered successfully'
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Registration error: {str(e)}", exc_info=True)
+            return Response({
+                'error': 'Registration failed. Please try again.',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

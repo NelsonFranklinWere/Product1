@@ -21,46 +21,45 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
       value: analytics.totalFollowers.toLocaleString(),
       change: '+12% this week',
       icon: Users,
-      color: 'blue' as const
+      color: 'slate' as const
     },
     {
       title: 'Total Engagement',
       value: analytics.totalEngagement.toLocaleString(),
       change: '+8% this week',
       icon: TrendingUp,
-      color: 'green' as const
+      color: 'fuchsia' as const
     },
     {
       title: 'Posts This Week',
       value: analytics.postsThisWeek,
       change: '3 more than last week',
       icon: BarChart3,
-      color: 'orange' as const
+      color: 'amber' as const
     },
     {
       title: 'Response Rate',
       value: `${analytics.responseRate}%`,
       change: '+2% improvement',
       icon: MessageSquare,
-      color: 'purple' as const
+      color: 'slate' as const
     }
   ];
 
   const getMetricCardColor = (color: string) => {
     const colors = {
-      blue: 'bg-blue-50 text-blue-600',
-      green: 'bg-green-50 text-green-600',
-      orange: 'bg-orange-50 text-orange-600',
-      purple: 'bg-purple-50 text-purple-600',
+      slate: 'bg-slate-50 text-slate-700',
+      fuchsia: 'bg-fuchsia-50 text-fuchsia-700',
+      amber: 'bg-amber-50 text-amber-700',
     };
-    return colors[color as keyof typeof colors] || colors.blue;
+    return colors[color as keyof typeof colors] || colors.slate;
   };
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <div className="flex items-center space-x-3 mb-6">
-          <BarChart3 className="w-6 h-6 text-blue-600" />
+          <BarChart3 className="w-6 h-6 text-slate-800" />
           <h2 className="text-xl font-semibold text-gray-900">Performance Analytics</h2>
         </div>
         
@@ -87,7 +86,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         {/* Engagement Trends Chart Placeholder */}
         <div className="border rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Engagement Trends</h3>
-          <div className="h-64 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg flex items-center justify-center">
+          <div className="h-64 bg-gradient-to-r from-slate-50 to-fuchsia-50 rounded-lg flex items-center justify-center">
             <div className="text-center text-gray-500">
               <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>Interactive chart will be implemented here</p>

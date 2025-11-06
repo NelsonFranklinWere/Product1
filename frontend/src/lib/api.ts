@@ -68,8 +68,22 @@ class ApiClient {
     location: string;
     phone_number?: string;
   }): Promise<{ user: User; token: string }> {
-    const response = await this.client.post('/api/auth/register/', data)
-    return response.data
+    // Clean up empty optional fields
+    const cleanedData = { ...data }
+    if (cleanedData.phone_number === '') {
+      delete cleanedData.phone_number
+    }
+    
+    console.log('Register request data:', cleanedData)
+    try {
+      const response = await this.client.post('/api/auth/register/', cleanedData)
+      console.log('Register response:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('Register error:', error)
+      console.error('Error response:', error.response?.data)
+      throw error
+    }
   }
 
   async login(email: string, password: string): Promise<{ user: User; token: string }> {
@@ -231,6 +245,19 @@ class ApiClient {
 
   async getAnalyticsDashboard(): Promise<any> {
     const response = await this.client.get('/api/analytics/dashboard/')
+    return response.data
+  }
+
+  async getPublicStats(): Promise<{
+    total_businesses: number;
+    total_messages: number;
+    total_mpesa_value: number;
+    avg_cost_reduction: number;
+    sample_revenue: number;
+    sample_response_time: number;
+    trend_data: number[];
+  }> {
+    const response = await this.client.get('/api/analytics/public-stats/')
     return response.data
   }
 

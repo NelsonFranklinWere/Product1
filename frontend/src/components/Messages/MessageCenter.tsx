@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { MessageCircle, Reply, Star, Archive, Filter, Send, Package, CreditCard } from 'lucide-react';
-import { Message } from '../../types';
 import apiClient from '@/lib/api'
 
 interface MessageCenterProps {
-  messages: Message[];
+  messages: any[];
   onReply: (messageId: string, reply: string) => void;
   onMarkAsRead: (messageId: string) => void;
 }
@@ -14,7 +13,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = ({
   onReply,
   onMarkAsRead
 }) => {
-  const [filter, setFilter] = useState<'all' | 'unread' | 'messages' | 'comments'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [composer, setComposer] = useState('')
   const [showPayment, setShowPayment] = useState(false)
@@ -26,8 +25,6 @@ export const MessageCenter: React.FC<MessageCenterProps> = ({
   const filteredMessages = messages.filter(message => {
     switch (filter) {
       case 'unread': return !message.is_read;
-  case 'messages': return message.message_type === 'message';
-  case 'comments': return message.message_type === 'comment';
       default: return true;
     }
   });
@@ -68,8 +65,6 @@ export const MessageCenter: React.FC<MessageCenterProps> = ({
               >
                 <option value="all">All Messages</option>
                 <option value="unread">Unread</option>
-                <option value="messages">Direct Messages</option>
-                <option value="comments">Comments</option>
               </select>
             </div>
           </div>
@@ -81,12 +76,12 @@ export const MessageCenter: React.FC<MessageCenterProps> = ({
           <div
             key={message.id}
             className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-              !message.isRead ? 'bg-blue-50 border-l-2 border-blue-500' : ''
+              !message.is_read ? 'bg-blue-50 border-l-2 border-blue-500' : ''
             }`}
             onClick={() => {
-              setSelectedMessage(message.id);
-              if (!message.isRead) {
-                onMarkAsRead(message.id);
+              setSelectedMessage(String(message.id));
+              if (!message.is_read) {
+                onMarkAsRead(String(message.id));
               }
             }}
           >

@@ -19,4 +19,7 @@ urlpatterns = [
     
     # Dashboard data
     path('dashboard/', views.AnalyticsDashboardView.as_view(), name='analytics-dashboard'),
+    
+    # Public stats (for landing page)
+    path('public-stats/', views.PublicStatsView.as_view(), name='public-stats'),
 ]

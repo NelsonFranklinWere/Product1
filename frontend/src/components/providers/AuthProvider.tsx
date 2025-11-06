@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(normalizedUser as User)
       localStorage.setItem('auth_token', token)
       localStorage.setItem('user', JSON.stringify(normalizedUser))
-      router.push('/')
+      router.push('/dashboard')
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 
                            error.response?.data?.message || 
@@ -92,15 +92,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...userData,
         id: String(userData.id),
       }
+      
+      // Set state and localStorage first
       setUser(normalizedUser as User)
       localStorage.setItem('auth_token', token)
       localStorage.setItem('user', JSON.stringify(normalizedUser))
-      router.push('/')
+      
+      console.log('Registration successful:', {
+        user: normalizedUser,
+        token: token.substring(0, 20) + '...',
+        hasToken: !!token
+      })
+      
+      // Small delay to ensure state is updated before redirect
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Redirect to dashboard
+      router.push('/dashboard')
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 
-                           error.response?.data?.message || 
-                           error.message || 
-                           'Registration failed. Please try again.'
+      // Extract detailed error messages from backend
+      let errorMessage = 'Registration failed. Please try again.'
+      
+      if (error.response?.data) {
+        const errorData = error.response.data
+        const fieldErrors: string[] = []
+        
+        // Handle field-specific validation errors
+        Object.keys(errorData).forEach((key) => {
+          if (Array.isArray(errorData[key])) {
+            fieldErrors.push(`${key}: ${errorData[key].join(', ')}`)
+          } else if (typeof errorData[key] === 'string') {
+            fieldErrors.push(errorData[key])
+          } else if (typeof errorData[key] === 'object' && errorData[key] !== null) {
+            Object.keys(errorData[key]).forEach((subKey) => {
+              if (Array.isArray(errorData[key][subKey])) {
+                fieldErrors.push(`${key}.${subKey}: ${errorData[key][subKey].join(', ')}`)
+              }
+            })
+          }
+        })
+        
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('. ')
+        } else if (errorData.error) {
+          errorMessage = errorData.error
+        } else if (errorData.message) {
+          errorMessage = errorData.message
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData
+        }
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
       throw new Error(errorMessage)
     }
   }
